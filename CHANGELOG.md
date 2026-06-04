@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-06-04
+
+### Changed
+
+- The Conversation admin now renders the conversation as a readable chat transcript
+  (user/assistant bubbles, compact tool-call notes) instead of raw inline rows. The
+  ActionLog admin gained a readable action summary, a colored result badge, and
+  pretty-printed arguments/result.
+
 ## [0.1.1] - 2026-06-04
 
 ### Added
@@ -37,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Manual test suite (`runtests.py`) with a fast offline path and an opt-in `--live`
   path against real Gemini.
 
-[Unreleased]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/SeenkaMedia/django-agent/releases/tag/v0.1.0
