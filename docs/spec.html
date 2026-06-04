@@ -100,7 +100,8 @@
   <table>
     <tr><th>Decisión</th><th>Elección</th><th>Por qué</th></tr>
     <tr><td>Forma de entrega</td><td><b>Paquete</b> (Django app in-process)</td><td>El agente ejecuta acciones sobre los modelos de cada app con los permisos del usuario logueado: trivial in-process, distribuido como servicio.</td></tr>
-    <tr><td>Backend LLM</td><td><b>Gemini · Vertex AI</b></td><td>Ya están en GCP (<code>infoxel-tagx</code>): autentica con la SA del pod (ADC), sin API key externa. Function-calling nativo.</td></tr>
+    <tr><td>Backend LLM</td><td><b>Gemini 3.5 Flash · Vertex AI</b></td><td>Ya están en GCP (<code>infoxel-tagx</code>): autentica con la SA del pod (ADC), sin API key externa. Function-calling nativo.</td></tr>
+    <tr><td>Acciones</td><td><b>CRUD automático sobre los modelos del admin</b></td><td>Sin declarar tools: el agente opera sobre cualquier modelo registrado en el admin, con los permisos Django del usuario. <b>Instalación plug-and-play.</b></td></tr>
     <tr><td>Storage</td><td>DB de la app (por ahora)</td><td>Memoria/conocimiento compartidos entre apps se externalizan después si hace falta (solo el storage, no la ejecución).</td></tr>
   </table>
 </section>
@@ -116,7 +117,7 @@
 │  django-agent (paquete, in-process en la app)                                                │
 │   views ─► AgentService ──► GeminiVertexClient (function-calling)                             │
 │                 │                                                                            │
-│                 ├─ ToolRegistry  (autodiscovery de agent_tools.py de cada app)               │
+│                 ├─ ModelRegistry (CRUD sobre los modelos del admin · permisos Django)        │
 │                 ├─ Permisos + Confirmación + AuditLog                                         │
 │                 └─ Conversation / Message  (persistencia)                                     │
 └───────────────────────────────────┬──────────────────────────────────────────────────────────┘
@@ -152,7 +153,7 @@ from google.genai import types
 client = genai.Client(vertexai=True, project="infoxel-tagx", location="us-central1")
 
 resp = client.models.generate_content(
-    model="gemini-2.5-flash",
+    model="gemini-3.5-flash",
     contents=history,                       # turnos previos + mensaje
     config=types.GenerateContentConfig(
         system_instruction=system_prompt,   # rol + page-context + memoria
@@ -166,30 +167,38 @@ resp = client.models.generate_content(
     <li>El backend resuelve la tool en el <code>ToolRegistry</code>, valida permiso y (si escribe) confirma.</li>
     <li>Se devuelve <code>functionResponse</code> al modelo y se repite hasta que responde texto.</li>
   </ol>
-  <div class="note">Modelo MVP: <code>gemini-2.5-flash</code> (rápido y barato, suficiente para extracción + tool-use). Configurable por setting; <code>gemini-2.5-pro</code> si se necesita más fiabilidad.</div>
+  <div class="note">Modelo: <code>gemini-3.5-flash</code> (rápido y barato, suficiente para extracción + tool-use). Configurable por setting.</div>
 </section>
 
 <section id="tools">
-  <h2><span class="n">6</span>Registro de tools</h2>
-  <p>Cada app declara sus tools en <code>agent_tools.py</code>; el paquete las autodescubre (como hace el admin). Una tool es: nombre, descripción, schema de parámetros (JSON Schema), permiso, flag de confirmación y la función.</p>
-  <pre><code># panelists/agent_tools.py
-from django_agent import tool
+  <h2><span class="n">6</span>CRUD automático sobre modelos <span class="pill mvp">plug-and-play</span></h2>
+  <p><b>No hay que declarar tools.</b> El agente opera genéricamente sobre los modelos <b>registrados en el admin</b> de cada app. Instalar = agregar a <code>INSTALLED_APPS</code> + incluir las URLs. Cero código por modelo.</p>
 
-@tool(
-    name="crear_cuentas",
-    description="Crea panelistas + cuentas a partir de credenciales en cualquier formato.",
-    params={"type":"object","properties":{
-        "cuentas":{"type":"array","items":{"type":"object","properties":{
-            "usuario":{"type":"string"}, "password":{"type":"string"},
-            "email":{"type":"string"}, "email_password":{"type":"string"},
-            "plataforma":{"type":"string","default":"TikTok"}}}}},
-        "required":["cuentas"]},
-    permission="panelists.add_account",   # permiso Django del request.user
-    confirm=True,                         # escribe → pide confirmación
-)
-def crear_cuentas(request, cuentas):
-    ...  # crea idempotente, devuelve resumen (creadas / ya existían)</code></pre>
-  <div class="note">El LLM resuelve el “cualquier formato”: extrae los campos del texto pegado y arma <code>cuentas</code>. El parsing rígido lo hace el modelo, no regex.</div>
+  <h3>Descubrimiento</h3>
+  <p>El <b>ModelRegistry</b> usa <code>admin.site._registry</code>: lo que está registrado en el admin es lo que el agente ve. Scoping natural — si un modelo no está en el admin, el agente no lo toca.</p>
+
+  <h3>Operaciones genéricas (las “tools” que ve Gemini)</h3>
+  <p>En vez de N tools por modelo, un puñado de funciones genéricas donde <code>model</code> es un parámetro — escala a cualquier cantidad de modelos sin inflar las declaraciones:</p>
+  <table>
+    <tr><th>Función</th><th>Permiso Django</th><th>Confirma</th></tr>
+    <tr><td><code>describe_models()</code> — modelos y sus campos</td><td>—</td><td>no</td></tr>
+    <tr><td><code>query(model, filtros, orden, límite)</code></td><td><code>view</code></td><td>no</td></tr>
+    <tr><td><code>get(model, pk)</code></td><td><code>view</code></td><td>no</td></tr>
+    <tr><td><code>create(model, data)</code></td><td><code>add</code></td><td><b>sí</b></td></tr>
+    <tr><td><code>update(model, pk, data)</code></td><td><code>change</code></td><td><b>sí</b></td></tr>
+    <tr><td><code>delete(model, pk)</code></td><td><code>delete</code></td><td><b>sí</b></td></tr>
+  </table>
+
+  <h3>Schemas de campos</h3>
+  <p>Derivados de <code>model._meta</code>: nombre, tipo, requerido, <code>choices</code>, y FKs (el agente resuelve la FK por nombre natural o pk). Los <code>JSONField</code> (ej. el <code>metadata</code> de Account) se escriben como objeto.</p>
+
+  <h3>Permisos automáticos</h3>
+  <p>Cada operación chequea el permiso Django del modelo (<code>view/add/change/delete</code>) contra <code>request.user</code>. Si no tiene permiso, esa operación no se ofrece. <b>Seguridad plug-and-play</b> — reusa el sistema de permisos que ya existe.</p>
+
+  <h3>El caso “crear cuentas en cualquier formato”</h3>
+  <p>Sale gratis del CRUD genérico: el LLM extrae los campos del texto pegado (lo que sea) y encadena <code>create(Panelist, …)</code> + <code>create(Account, {…, metadata:{…}})</code>. El parsing flexible lo hace el modelo, no regex, y sin tool dedicada.</p>
+
+  <div class="note">Escape hatch (opcional): si un modelo necesita lógica especial (idempotencia, derivaciones), una app <i>puede</i> registrar una tool custom. Es opcional, no requerido — el default es CRUD automático.</div>
 </section>
 
 <section id="seguridad">
@@ -246,17 +255,17 @@ def crear_cuentas(request, cuentas):
   <h2><span class="n">11</span>Alcance del MVP</h2>
   <p><span class="pill mvp">Incluye</span></p>
   <ul>
-    <li>Paquete instalable + widget flotante (staff-only).</li>
-    <li>Backend Gemini Vertex con function-calling.</li>
-    <li>Persistencia de conversación (sobrevive navegación/recarga).</li>
+    <li>Paquete instalable <b>plug-and-play</b> + widget flotante (staff-only, solo admin).</li>
+    <li>Backend <b>Gemini 3.5 Flash</b> (Vertex) con function-calling.</li>
+    <li><b>CRUD automático</b> sobre los modelos del admin (ModelRegistry), con permisos Django.</li>
+    <li>Persistencia de conversación — <b>una por usuario</b> (sobrevive navegación/recarga).</li>
     <li>Page-context.</li>
-    <li>ToolRegistry + autodiscovery.</li>
     <li>Seguridad: permisos + confirmación + audit log.</li>
-    <li>Tool real: <code>crear_cuentas</code> en panelists.</li>
+    <li>Validado con el caso real: <code>crear cuentas</code> en panelists (vía CRUD genérico).</li>
   </ul>
   <p><span class="pill">Fuera del MVP</span></p>
   <ul class="mut">
-    <li>Conocimiento/RAG, memoria/aprendizaje, storage compartido entre apps, multi-conversación, streaming de tokens.</li>
+    <li>Conocimiento/RAG, memoria/aprendizaje, storage compartido entre apps, multi-conversación, streaming, tools custom.</li>
   </ul>
 </section>
 
@@ -284,14 +293,18 @@ def crear_cuentas(request, cuentas):
 </section>
 
 <section id="abierto">
-  <h2><span class="n">14</span>Decisiones a validar</h2>
-  <div class="q"><b>Q1.</b> Modelo: ¿arrancamos con <code>gemini-2.5-flash</code> (rápido/barato) y subimos a <code>pro</code> si hace falta?</div>
-  <div class="q"><b>Q2.</b> ¿Una conversación activa por usuario, o múltiples con selector?</div>
-  <div class="q"><b>Q3.</b> Montaje del widget: ¿solo en el admin de Django, o también en vistas custom del front? (MVP: admin)</div>
-  <div class="q"><b>Q4.</b> Permiso de infra: ¿quién agrega <code>roles/aiplatform.user</code> a la SA de los pods en <code>infoxel-tagx</code>?</div>
-  <div class="q"><b>Q5.</b> Región Vertex: <code>us-central1</code> (igual que el cluster) — ¿ok?</div>
-  <div class="q"><b>Q6.</b> ¿El widget para <code>is_staff</code> o un permiso más fino?</div>
-  <div class="q"><b>Q7.</b> ¿Primer repo de prueba = <code>panelists</code>, y extraemos el paquete una vez estable?</div>
+  <h2><span class="n">14</span>Decisiones <span class="pill mvp">cerradas</span></h2>
+  <table>
+    <tr><th>#</th><th>Tema</th><th>Decisión</th></tr>
+    <tr><td>1</td><td>Acciones</td><td><b>CRUD automático</b> sobre los modelos del admin (sin declarar tools) — plug-and-play</td></tr>
+    <tr><td>2</td><td>Modelo</td><td><code>gemini-3.5-flash</code></td></tr>
+    <tr><td>3</td><td>Conversación</td><td><b>Una por usuario</b></td></tr>
+    <tr><td>4</td><td>Montaje</td><td><b>Solo en el admin</b> de Django</td></tr>
+    <tr><td>5</td><td>Acceso</td><td><code>is_staff</code> (default)</td></tr>
+    <tr><td>6</td><td>Región Vertex</td><td><code>us-central1</code> (default)</td></tr>
+    <tr><td>7</td><td>Repo de prueba</td><td>Arrancar en <code>panelists</code>, extraer el paquete cuando esté estable (default)</td></tr>
+  </table>
+  <div class="note warn"><b>Único prerequisito de infra:</b> darle el rol <code>roles/aiplatform.user</code> a la service account de los pods en <code>infoxel-tagx</code> para que ADC pueda llamar a Vertex. Sin eso, el agente no puede hablar con Gemini.</div>
 </section>
 
 </main>
