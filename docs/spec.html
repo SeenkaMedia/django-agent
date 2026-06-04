@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>django-agent — Spec MVP</title>
+<style>
+  :root{
+    --bg:#0f1117; --panel:#171a23; --panel2:#1d212c; --ink:#e7e9ee; --mut:#9aa3b2;
+    --acc:#7c9cff; --acc2:#6ee7b7; --warn:#fbbf24; --danger:#f87171; --line:#2a2f3c;
+    --code:#0b0d13;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  header{position:sticky;top:0;z-index:10;background:rgba(15,17,23,.9);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);padding:14px 28px;display:flex;align-items:baseline;gap:14px}
+  header h1{font-size:17px;margin:0;letter-spacing:.2px}
+  header .tag{font-size:12px;color:var(--mut)}
+  .wrap{display:grid;grid-template-columns:230px 1fr;gap:0;max-width:1180px;margin:0 auto}
+  nav{position:sticky;top:57px;align-self:start;height:calc(100vh - 57px);overflow:auto;
+    padding:22px 16px;border-right:1px solid var(--line);font-size:13.5px}
+  nav a{display:block;color:var(--mut);text-decoration:none;padding:4px 8px;border-radius:6px}
+  nav a:hover{color:var(--ink);background:var(--panel)}
+  nav .grp{color:#6b7280;text-transform:uppercase;font-size:11px;letter-spacing:.8px;margin:16px 8px 4px}
+  main{padding:30px 36px 120px;min-width:0}
+  section{margin:0 0 42px;scroll-margin-top:70px}
+  h2{font-size:20px;margin:0 0 6px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  h2 .n{color:var(--acc);font-variant-numeric:tabular-nums;margin-right:8px}
+  h3{font-size:15px;margin:22px 0 6px;color:#cfd5e2}
+  p{margin:8px 0;color:#d4d8e2}
+  ul,ol{margin:8px 0;padding-left:22px}
+  li{margin:4px 0}
+  code{background:var(--code);border:1px solid var(--line);border-radius:5px;padding:.5px 5px;
+    font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#e3e7f0}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto;margin:10px 0}
+  pre code{border:0;padding:0;background:none}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .pill{display:inline-block;font-size:11px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--mut);margin-right:6px}
+  .pill.mvp{color:#0b0d13;background:var(--acc2);border-color:var(--acc2)}
+  .pill.later{color:var(--warn);border-color:var(--warn)}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mut);font-weight:600}
+  .note{border-left:3px solid var(--acc);padding:8px 14px;background:var(--panel2);border-radius:0 8px 8px 0;margin:12px 0}
+  .danger{border-left-color:var(--danger)}
+  .ok{border-left-color:var(--acc2)}
+  .warn{border-left-color:var(--warn)}
+  .q{background:var(--panel2);border:1px dashed var(--line);border-radius:10px;padding:12px 16px;margin:10px 0}
+  .q b{color:var(--acc)}
+  .mut{color:var(--mut)}
+  .flow{font:13px/1.7 ui-monospace,monospace;white-space:pre;color:#cdd3df;background:var(--code);border:1px solid var(--line);border-radius:10px;padding:16px;overflow:auto}
+  a.anchor{color:var(--acc);text-decoration:none}
+  @media(max-width:860px){.wrap{grid-template-columns:1fr}nav{display:none}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>django-agent</h1>
+  <span class="tag">Spec del MVP · v0.1 · borrador para validar</span>
+</header>
+<div class="wrap">
+<nav>
+  <div class="grp">Diseño</div>
+  <a href="#objetivo">1 · Objetivo</a>
+  <a href="#decisiones">2 · Decisiones</a>
+  <a href="#arquitectura">3 · Arquitectura</a>
+  <a href="#flujo">4 · Flujo de un mensaje</a>
+  <div class="grp">Detalle</div>
+  <a href="#vertex">5 · Gemini en Vertex</a>
+  <a href="#tools">6 · Registro de tools</a>
+  <a href="#seguridad">7 · Seguridad</a>
+  <a href="#modelos">8 · Modelos de datos</a>
+  <a href="#widget">9 · Widget &amp; page-context</a>
+  <a href="#estado">10 · Estado &amp; persistencia</a>
+  <div class="grp">Plan</div>
+  <a href="#alcance">11 · Alcance MVP</a>
+  <a href="#futuro">12 · Fases futuras</a>
+  <a href="#stack">13 · Stack</a>
+  <a href="#abierto">14 · A validar</a>
+</nav>
+<main>
+
+<section id="objetivo">
+  <h2><span class="n">1</span>Objetivo</h2>
+  <p><b>django-agent</b> es un paquete Django reutilizable que agrega un <b>widget de chat flotante</b> (abajo a la derecha) a cualquier app/admin de Seenka. Detrás hay un agente LLM (Gemini en Vertex) que:</p>
+  <ul>
+    <li>Entiende <b>en qué página está</b> el usuario.</li>
+    <li>Mantiene la conversación <b>persistente</b> entre navegación y recargas.</li>
+    <li>Puede recibir <b>contexto/conocimiento</b> y, con el tiempo, <b>aprender</b>.</li>
+    <li>Puede <b>ejecutar acciones</b> sobre los datos de la app (con permisos + confirmación + auditoría).</li>
+  </ul>
+  <p class="mut">Caso de uso disparador: en el admin de <code>panelists</code>, pegar credenciales en cualquier formato y que cree los panelistas/cuentas — sin scripts.</p>
+</section>
+
+<section id="decisiones">
+  <h2><span class="n">2</span>Decisiones tomadas</h2>
+  <table>
+    <tr><th>Decisión</th><th>Elección</th><th>Por qué</th></tr>
+    <tr><td>Forma de entrega</td><td><b>Paquete</b> (Django app in-process)</td><td>El agente ejecuta acciones sobre los modelos de cada app con los permisos del usuario logueado: trivial in-process, distribuido como servicio.</td></tr>
+    <tr><td>Backend LLM</td><td><b>Gemini · Vertex AI</b></td><td>Ya están en GCP (<code>infoxel-tagx</code>): autentica con la SA del pod (ADC), sin API key externa. Function-calling nativo.</td></tr>
+    <tr><td>Storage</td><td>DB de la app (por ahora)</td><td>Memoria/conocimiento compartidos entre apps se externalizan después si hace falta (solo el storage, no la ejecución).</td></tr>
+  </table>
+</section>
+
+<section id="arquitectura">
+  <h2><span class="n">3</span>Arquitectura</h2>
+  <div class="flow">┌─────────────────────────── Navegador (cualquier página del admin) ───────────────────────────┐
+│   Widget flotante (JS/CSS del paquete)                                                        │
+│     • lee page-context (URL, vista, objeto)   • muestra historial   • input + confirmaciones  │
+└───────────────▲───────────────────────────────────────────────────────────│──────────────────┘
+                │  GET /agent/history     POST /agent/message  /agent/confirm │
+┌───────────────┴─────────────────────────────────────────────────────────▼──────────────────┐
+│  django-agent (paquete, in-process en la app)                                                │
+│   views ─► AgentService ──► GeminiVertexClient (function-calling)                             │
+│                 │                                                                            │
+│                 ├─ ToolRegistry  (autodiscovery de agent_tools.py de cada app)               │
+│                 ├─ Permisos + Confirmación + AuditLog                                         │
+│                 └─ Conversation / Message  (persistencia)                                     │
+└───────────────────────────────────┬──────────────────────────────────────────────────────────┘
+                                     │  ADC (service account del pod)
+                                     ▼
+                         Vertex AI · Gemini (us-central1)</div>
+  <p>Todo corre dentro del proceso de la app Django. El único salto de red es a Vertex AI.</p>
+</section>
+
+<section id="flujo">
+  <h2><span class="n">4</span>Flujo de un mensaje</h2>
+  <ol>
+    <li>El widget carga en la página → <code>GET /agent/history</code> trae la conversación activa del usuario.</li>
+    <li>El usuario escribe → <code>POST /agent/message</code> con <code>{text, page_context}</code>.</li>
+    <li>El backend arma el prompt: <i>system</i> (instrucciones + contexto de app + page-context + memoria) + historial + mensaje, y declara las <b>tools</b> disponibles para ese usuario.</li>
+    <li>Gemini responde texto <b>o</b> un <code>functionCall</code>.</li>
+    <li>Si es una tool de <b>lectura</b> → se ejecuta y el resultado vuelve al modelo para la respuesta final.</li>
+    <li>Si es una tool de <b>escritura</b> (<code>confirm=True</code>) → <b>no se ejecuta</b>: el backend devuelve al widget una tarjeta de confirmación con el preview de lo que haría.</li>
+    <li>El usuario confirma → <code>POST /agent/confirm</code> → se chequea permiso, se ejecuta, se escribe en <b>AuditLog</b>, el resultado vuelve al modelo → respuesta final.</li>
+    <li>Cada turno (usuario, asistente, tool) se persiste en <code>Message</code>.</li>
+  </ol>
+  <div class="note ok">La confirmación es el corazón de la seguridad: ninguna escritura ocurre sin un “sí” explícito del usuario sobre un preview concreto.</div>
+</section>
+
+<section id="vertex">
+  <h2><span class="n">5</span>Gemini en Vertex AI</h2>
+  <h3>Autenticación</h3>
+  <p>Vía <b>Application Default Credentials</b>: la service account del pod. Sin API key. Requiere que esa SA tenga el rol <code>roles/aiplatform.user</code> en <code>infoxel-tagx</code>. <span class="pill later">acción de infra</span></p>
+  <h3>SDK y cliente</h3>
+  <pre><code>from google import genai
+from google.genai import types
+
+client = genai.Client(vertexai=True, project="infoxel-tagx", location="us-central1")
+
+resp = client.models.generate_content(
+    model="gemini-2.5-flash",
+    contents=history,                       # turnos previos + mensaje
+    config=types.GenerateContentConfig(
+        system_instruction=system_prompt,   # rol + page-context + memoria
+        tools=[tool_declarations],          # function declarations
+        temperature=0.2,
+    ),
+)</code></pre>
+  <h3>Function-calling (loop del agente)</h3>
+  <ol>
+    <li>El modelo devuelve <code>functionCall(name, args)</code>.</li>
+    <li>El backend resuelve la tool en el <code>ToolRegistry</code>, valida permiso y (si escribe) confirma.</li>
+    <li>Se devuelve <code>functionResponse</code> al modelo y se repite hasta que responde texto.</li>
+  </ol>
+  <div class="note">Modelo MVP: <code>gemini-2.5-flash</code> (rápido y barato, suficiente para extracción + tool-use). Configurable por setting; <code>gemini-2.5-pro</code> si se necesita más fiabilidad.</div>
+</section>
+
+<section id="tools">
+  <h2><span class="n">6</span>Registro de tools</h2>
+  <p>Cada app declara sus tools en <code>agent_tools.py</code>; el paquete las autodescubre (como hace el admin). Una tool es: nombre, descripción, schema de parámetros (JSON Schema), permiso, flag de confirmación y la función.</p>
+  <pre><code># panelists/agent_tools.py
+from django_agent import tool
+
+@tool(
+    name="crear_cuentas",
+    description="Crea panelistas + cuentas a partir de credenciales en cualquier formato.",
+    params={"type":"object","properties":{
+        "cuentas":{"type":"array","items":{"type":"object","properties":{
+            "usuario":{"type":"string"}, "password":{"type":"string"},
+            "email":{"type":"string"}, "email_password":{"type":"string"},
+            "plataforma":{"type":"string","default":"TikTok"}}}}},
+        "required":["cuentas"]},
+    permission="panelists.add_account",   # permiso Django del request.user
+    confirm=True,                         # escribe → pide confirmación
+)
+def crear_cuentas(request, cuentas):
+    ...  # crea idempotente, devuelve resumen (creadas / ya existían)</code></pre>
+  <div class="note">El LLM resuelve el “cualquier formato”: extrae los campos del texto pegado y arma <code>cuentas</code>. El parsing rígido lo hace el modelo, no regex.</div>
+</section>
+
+<section id="seguridad">
+  <h2><span class="n">7</span>Seguridad <span class="pill mvp">MVP</span></h2>
+  <ul>
+    <li><b>Permisos:</b> cada tool declara un permiso Django; se evalúa contra <code>request.user</code>. Sin permiso, la tool ni se ofrece al modelo.</li>
+    <li><b>Confirmación:</b> toda tool con <code>confirm=True</code> muestra un preview y exige “Confirmar” antes de ejecutar. El modelo nunca escribe solo.</li>
+    <li><b>Audit log:</b> toda ejecución guarda usuario, tool, args, resultado, timestamp.</li>
+    <li><b>Scope:</b> el agente solo ve las tools de las apps instaladas y permitidas para ese usuario.</li>
+    <li><b>Staff-only:</b> el widget solo se monta para usuarios <code>is_staff</code> (configurable).</li>
+  </ul>
+  <div class="note danger">Regla dura: el LLM <b>propone</b>, el usuario <b>confirma</b>, el backend <b>ejecuta con permisos</b>. Ninguna acción destructiva sin confirmación.</div>
+</section>
+
+<section id="modelos">
+  <h2><span class="n">8</span>Modelos de datos <span class="pill mvp">MVP</span></h2>
+  <div class="grid2">
+    <div class="card"><b>Conversation</b>
+      <ul><li><code>user</code> FK</li><li><code>created_at</code>, <code>updated_at</code></li><li><code>title</code> (autogenerado)</li><li>1 activa por usuario (o varias, a definir)</li></ul></div>
+    <div class="card"><b>Message</b>
+      <ul><li><code>conversation</code> FK</li><li><code>role</code>: user / assistant / tool</li><li><code>content</code></li><li><code>tool_name</code>, <code>tool_args</code>, <code>tool_result</code> (si aplica)</li><li><code>created_at</code></li></ul></div>
+    <div class="card"><b>ActionLog</b> (auditoría)
+      <ul><li><code>user</code>, <code>conversation</code></li><li><code>tool_name</code>, <code>args</code></li><li><code>status</code>, <code>result</code></li><li><code>created_at</code></li></ul></div>
+    <div class="card later"><b>Knowledge / Memory</b> <span class="pill later">fase 2-3</span>
+      <ul><li>contexto por app inyectable</li><li>hechos aprendidos + feedback</li></ul></div>
+  </div>
+</section>
+
+<section id="widget">
+  <h2><span class="n">9</span>Widget &amp; page-context</h2>
+  <ul>
+    <li>JS/CSS vanilla servidos por el paquete; se inyectan vía un fragmento en el base template del admin (o un context processor).</li>
+    <li>Burbuja abajo a la derecha; abre un panel con historial + input + tarjetas de confirmación.</li>
+    <li><b>Page-context</b> que manda con cada mensaje: <code>url</code>, <code>path</code>, vista resuelta, y si está editando un objeto: <code>model</code> + <code>pk</code>. El backend lo puede enriquecer (traer el objeto).</li>
+  </ul>
+  <pre><code>page_context = {
+  "url": "/admin/panelists/account/",
+  "view": "panelists.account.changelist",
+  "object": null            // o {"model":"panelists.account","pk":16}
+}</code></pre>
+</section>
+
+<section id="estado">
+  <h2><span class="n">10</span>Estado &amp; persistencia</h2>
+  <p>El estado vive <b>server-side</b> (modelos <code>Conversation</code>/<code>Message</code>), no en el navegador. Por eso sobrevive a:</p>
+  <ul>
+    <li><b>Cambio de página:</b> el widget vuelve a montar y trae el historial por <code>GET /agent/history</code>.</li>
+    <li><b>Recarga / otra pestaña:</b> misma conversación (clave: <code>user</code>).</li>
+  </ul>
+  <p class="mut">El page-context cambia con cada página; la conversación es continua.</p>
+</section>
+
+<section id="alcance">
+  <h2><span class="n">11</span>Alcance del MVP</h2>
+  <p><span class="pill mvp">Incluye</span></p>
+  <ul>
+    <li>Paquete instalable + widget flotante (staff-only).</li>
+    <li>Backend Gemini Vertex con function-calling.</li>
+    <li>Persistencia de conversación (sobrevive navegación/recarga).</li>
+    <li>Page-context.</li>
+    <li>ToolRegistry + autodiscovery.</li>
+    <li>Seguridad: permisos + confirmación + audit log.</li>
+    <li>Tool real: <code>crear_cuentas</code> en panelists.</li>
+  </ul>
+  <p><span class="pill">Fuera del MVP</span></p>
+  <ul class="mut">
+    <li>Conocimiento/RAG, memoria/aprendizaje, storage compartido entre apps, multi-conversación, streaming de tokens.</li>
+  </ul>
+</section>
+
+<section id="futuro">
+  <h2><span class="n">12</span>Fases futuras</h2>
+  <ol>
+    <li><b>Conocimiento</b> — store de contexto por app + recuperación (RAG si crece).</li>
+    <li><b>Aprendizaje</b> — memoria de hechos + feedback 👍/👎 recuperado por turno.</li>
+    <li><b>Storage compartido</b> — externalizar memoria/conocimiento entre apps (solo storage).</li>
+    <li><b>UX</b> — streaming, multi-conversación, búsqueda en historial.</li>
+  </ol>
+</section>
+
+<section id="stack">
+  <h2><span class="n">13</span>Stack &amp; dependencias</h2>
+  <table>
+    <tr><th>Pieza</th><th>Elección</th></tr>
+    <tr><td>LLM</td><td>Vertex AI Gemini (<code>google-genai</code>, backend Vertex)</td></tr>
+    <tr><td>Auth</td><td>ADC (service account del pod) · rol <code>aiplatform.user</code></td></tr>
+    <tr><td>Backend</td><td>Django app pura (sin DRF obligatorio; endpoints simples JSON)</td></tr>
+    <tr><td>Front</td><td>JS/CSS vanilla (sin build step)</td></tr>
+    <tr><td>Empaquetado</td><td><code>pyproject.toml</code> · instalable por pip/git</td></tr>
+    <tr><td>Tests</td><td>pytest + Django; mock del cliente Vertex</td></tr>
+  </table>
+</section>
+
+<section id="abierto">
+  <h2><span class="n">14</span>Decisiones a validar</h2>
+  <div class="q"><b>Q1.</b> Modelo: ¿arrancamos con <code>gemini-2.5-flash</code> (rápido/barato) y subimos a <code>pro</code> si hace falta?</div>
+  <div class="q"><b>Q2.</b> ¿Una conversación activa por usuario, o múltiples con selector?</div>
+  <div class="q"><b>Q3.</b> Montaje del widget: ¿solo en el admin de Django, o también en vistas custom del front? (MVP: admin)</div>
+  <div class="q"><b>Q4.</b> Permiso de infra: ¿quién agrega <code>roles/aiplatform.user</code> a la SA de los pods en <code>infoxel-tagx</code>?</div>
+  <div class="q"><b>Q5.</b> Región Vertex: <code>us-central1</code> (igual que el cluster) — ¿ok?</div>
+  <div class="q"><b>Q6.</b> ¿El widget para <code>is_staff</code> o un permiso más fino?</div>
+  <div class="q"><b>Q7.</b> ¿Primer repo de prueba = <code>panelists</code>, y extraemos el paquete una vez estable?</div>
+</section>
+
+</main>
+</div>
+</body>
+</html>
