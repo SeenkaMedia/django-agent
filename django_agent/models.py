@@ -22,6 +22,7 @@ class Message(models.Model):
     tool_name = models.CharField(max_length=100, blank=True)
     tool_args = models.JSONField(null=True, blank=True)
     tool_result = models.JSONField(null=True, blank=True)
+    thought_signature = models.TextField(blank=True)  # Gemini 3.x: firma del function_call (base64)
     status = models.CharField(max_length=10, choices=STATUSES, default="ok")
     created_at = models.DateTimeField(auto_now_add=True)
 

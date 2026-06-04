@@ -1,4 +1,5 @@
 """Orquestación del agente: prompt, loop de function-calling y confirmación de escrituras."""
+import base64
 import json
 
 from google.genai import types
@@ -15,8 +16,11 @@ entender cómo funciona— llamando a las funciones disponibles. Operás siempre
 del usuario; el sistema bloquea lo que no puede hacer.
 
 # Cómo trabajás
+- Usá la página actual como contexto: si corresponde a un modelo, asumí que el usuario se
+  refiere a ESE modelo salvo que aclare otro (no lo confundas con modelos de nombre parecido).
 - Entendé el dominio antes de actuar: si no conocés un modelo o sus campos, llamá describe_models.
-- Para operar sobre datos existentes, buscalos primero con query/get.
+- Para operar sobre datos existentes, buscalos primero con query/get. No le pidas al usuario
+  IDs internos (pk): si te da un nombre u otro dato, encontrá el registro vos con query.
 - Elegí la operación correcta:
   · query / get para leer.
   · create solo para dar de alta un registro nuevo.
@@ -112,11 +116,12 @@ def _run(conv, user, page_context):
     functions = _functions()
     for _ in range(S.max_steps()):
         resp = vertex.generate(system, _contents(conv), functions)
-        kind, name, args = _extract(resp)
+        kind, name, args, sig = _extract(resp)
         if kind == "text":
             Message.objects.create(conversation=conv, role="model", text=name)
             return {"reply": name}
         Message.objects.create(conversation=conv, role="model", tool_name=name, tool_args=args,
+                               thought_signature=_enc(sig),
                                status="pending" if name in WRITE_OPS else "ok")
         if name in WRITE_OPS:
             return {"confirm": {"op": name, "args": _coerce(args), "preview": _preview(name, args)}}
@@ -182,18 +187,24 @@ def _content(m):
         resp = m.tool_result if isinstance(m.tool_result, dict) else {"result": m.tool_result}
         return types.Content(role="user", parts=[types.Part.from_function_response(name=m.tool_name, response=resp)])
     if m.tool_name:
-        return types.Content(role="model", parts=[types.Part(
-            function_call=types.FunctionCall(name=m.tool_name, args=m.tool_args or {}))])
+        part = types.Part(function_call=types.FunctionCall(name=m.tool_name, args=m.tool_args or {}))
+        if m.thought_signature:
+            part.thought_signature = base64.b64decode(m.thought_signature)
+        return types.Content(role="model", parts=[part])
     return types.Content(role="model", parts=[types.Part(text=m.text)])
 
 
+def _enc(sig):
+    return base64.b64encode(sig).decode() if sig else ""
+
+
 def _extract(resp):
-    call, texts = None, []
+    call, sig, texts = None, None, []
     for part in resp.candidates[0].content.parts:
         if getattr(part, "function_call", None):
-            call = part.function_call
+            call, sig = part.function_call, getattr(part, "thought_signature", None)
         elif getattr(part, "text", None):
             texts.append(part.text)
     if call:
-        return "call", call.name, dict(call.args or {})
-    return "text", "".join(texts), None
+        return "call", call.name, dict(call.args or {}), sig
+    return "text", "".join(texts), None, None

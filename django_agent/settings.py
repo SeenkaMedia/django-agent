@@ -7,7 +7,7 @@ def _get(name, default):
 
 
 def model():
-    return _get("MODEL", "gemini-2.5-flash")
+    return _get("MODEL", "gemini-3.5-flash")
 
 
 def project():
@@ -15,7 +15,7 @@ def project():
 
 
 def location():
-    return _get("VERTEX_LOCATION", "us-central1")
+    return _get("VERTEX_LOCATION", "global")  # gemini-3.5-flash vive en global
 
 
 def temperature():
