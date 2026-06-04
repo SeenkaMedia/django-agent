@@ -71,6 +71,17 @@ python manage.py migrate
 
 Listo: el widget aparece abajo a la derecha en el admin para usuarios `is_staff`, con CRUD sobre los modelos registrados (respetando permisos) y confirmación + audit log en toda escritura.
 
+## Tests (manuales)
+
+No corren en CI; se invocan a mano:
+
+```bash
+python runtests.py            # rápidos, sin Vertex (deterministas, ~0.05s)
+GOOGLE_APPLICATION_CREDENTIALS=/ruta/cred.json python runtests.py --live   # + Gemini real
+```
+
+Cubre: CRUD + permisos + serialización + resolución de FK (`test_registry`), búsqueda/lectura de código + denylist + traversal + redacción de secrets (`test_code_access`), loop del agente con Vertex mockeado — confirmación/audit/pending/lecturas (`test_agent`), y end-to-end contra Gemini real — function-calling, create+confirm, lectura de código (`test_live`, opt-in con `--live`).
+
 ## Estado
 
 🚧 MVP implementado (rama `feat/mvp`). Pendiente: validación end-to-end (instalar en panelists + rol de Vertex) y tests con mock del cliente Vertex.
