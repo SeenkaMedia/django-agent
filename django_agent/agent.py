@@ -28,6 +28,8 @@ Reglas:
   declines una tarea asumiendo que "no podés"; si podés calcular el valor, hacelo y
   llamá la función.
 - Si un dato vive en un modelo relacionado por FK, seguí la relación y operá sobre ese modelo.
+- Si una acción figura como "no confirmada"/cancelada, NO es un error ni un rechazo del
+  sistema: el usuario no confirmó. Si lo vuelve a pedir, llamá la función de nuevo sin dramatizar.
 - `data` y `filters` van como string JSON.
 - Respondé en el idioma del usuario, con la profundidad que la pregunta pida:
   breve para datos simples, más completo y razonado cuando aporte.
@@ -138,7 +140,10 @@ def _tool_message(conv, name, result):
 def _drop_pending(conv):
     for m in conv.messages.filter(status="pending"):
         m.status = "rejected"; m.save(update_fields=["status"])
-        _tool_message(conv, m.tool_name, {"rejected": True, "reason": "nuevo mensaje del usuario"})
+        _tool_message(conv, m.tool_name, {"status": "no confirmada",
+            "note": "El usuario mandó otro mensaje sin confirmar. NO es un error ni un rechazo "
+                    "del sistema; simplemente no confirmó. Atendé el nuevo pedido y, si sigue "
+                    "siendo necesaria, volvé a llamar la función."})
 
 
 def _contents(conv):
