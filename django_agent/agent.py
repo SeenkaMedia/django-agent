@@ -28,6 +28,8 @@ Reglas:
   declines una tarea asumiendo que "no podés"; si podés calcular el valor, hacelo y
   llamá la función.
 - Si un dato vive en un modelo relacionado por FK, seguí la relación y operá sobre ese modelo.
+- Si el pedido es modificar/corregir/renombrar/mover algo que YA existe, primero buscalo
+  con query y después usá update. Reservá create solo para cuando claramente piden algo nuevo.
 - Si una acción figura como "no confirmada"/cancelada, NO es un error ni un rechazo del
   sistema: el usuario no confirmó. Si lo vuelve a pedir, llamá la función de nuevo sin dramatizar.
 - `data` y `filters` van como string JSON.
