@@ -116,16 +116,68 @@
       .finally(function () { setBusy(false); });
   }
 
+  var ACTIONS = {
+    create: { cls: "create", label: "Crear", verb: "Crear", icon: "＋" },
+    update: { cls: "update", label: "Modificar", verb: "Guardar", icon: "✎" },
+    delete: { cls: "delete", label: "Borrar", verb: "Borrar", icon: "🗑", danger: true },
+  };
+
+  function fmtVal(v) {
+    if (v === null || v === undefined || v === "") return "—";
+    if (typeof v === "object") return v._str !== undefined ? v._str : JSON.stringify(v);
+    return String(v);
+  }
+
+  function span(text, cls) {
+    var s = document.createElement("span"); s.className = cls; s.textContent = text; return s;
+  }
+
+  function kvRow(key, valueNode) {
+    var row = document.createElement("div"); row.className = "ag-kv-row";
+    row.appendChild(span(key, "ag-k")); row.appendChild(valueNode); return row;
+  }
+
+  function diffNode(oldText, newText) {
+    var w = document.createElement("span");
+    w.appendChild(span(oldText, "ag-old")); w.appendChild(span(" → ", "ag-arrow")); w.appendChild(span(newText, "ag-new"));
+    return w;
+  }
+
+  function cardBody(p) {
+    var box = document.createElement("div"); box.className = "ag-kv";
+    if (p.op === "delete") {
+      box.appendChild(kvRow(p.model_verbose || "registro", span(fmtVal(p.current) , "ag-v")));
+      return box;
+    }
+    var data = p.data || {};
+    Object.keys(data).forEach(function (k) {
+      var nv = fmtVal(data[k]);
+      if (p.op === "update" && p.current && k in p.current) {
+        var ov = fmtVal(p.current[k]);
+        box.appendChild(kvRow(k, ov === nv ? span(nv + "  (sin cambios)", "ag-same") : diffNode(ov, nv)));
+      } else {
+        box.appendChild(kvRow(k, span(nv, "ag-new")));
+      }
+    });
+    return box;
+  }
+
   function confirmCard(c) {
-    var card = document.createElement("div");
-    card.className = "ag-card";
-    var body = { model: c.preview.model, pk: c.preview.pk, data: c.preview.data, filters: c.preview.filters };
-    card.innerHTML = "<h4>Confirmar: " + escapeHtml(String(c.op)) + "</h4><pre>" +
-      escapeHtml(JSON.stringify(body, null, 2)) + "</pre>" +
-      '<div class="ag-actions"><button class="ag-ok">Confirmar</button><button class="ag-no">Cancelar</button></div>';
+    var p = c.preview || {}, meta = ACTIONS[c.op] || { cls: "", label: c.op, verb: "Confirmar", icon: "•" };
+    var card = document.createElement("div"); card.className = "ag-card " + meta.cls;
+    var title = p.model_verbose || p.model || "";
+    if (p.pk) title += " #" + p.pk;
+    card.appendChild(span(meta.icon + " " + meta.label + " · " + title, "ag-card-head"));
+    card.appendChild(cardBody(p));
+    if (meta.danger) card.appendChild(span("⚠ Esta acción no se puede deshacer.", "ag-warn"));
+    var actions = document.createElement("div"); actions.className = "ag-actions";
+    var ok = document.createElement("button"); ok.className = "ag-ok" + (meta.danger ? " danger" : ""); ok.textContent = meta.verb;
+    var no = document.createElement("button"); no.className = "ag-no"; no.textContent = "Cancelar";
+    actions.appendChild(ok); actions.appendChild(no);
+    card.appendChild(actions);
     el.msgs.appendChild(card); scroll();
-    card.querySelector(".ag-ok").addEventListener("click", function () { resolve(card, true); });
-    card.querySelector(".ag-no").addEventListener("click", function () { resolve(card, false); });
+    ok.addEventListener("click", function () { resolve(card, true); });
+    no.addEventListener("click", function () { resolve(card, false); });
   }
 
   function resolve(card, accept) {

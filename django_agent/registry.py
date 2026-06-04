@@ -150,6 +150,20 @@ def _describe(user):
     return {"models": describe_models(user)}
 
 
+def verbose(label):
+    try:
+        return str(get_model(label)._meta.verbose_name)
+    except Exception:
+        return label
+
+
+def snapshot(label, pk):
+    try:
+        return _serialize(get_model(label).objects.get(pk=pk))
+    except Exception:
+        return None
+
+
 OPS = {"describe_models": _describe, "query": query, "get": get,
        "create": create, "update": update, "delete": delete}
 

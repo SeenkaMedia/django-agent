@@ -82,6 +82,16 @@ class AgentMockedTests(TestCase):
             result = agent.handle_message(self.user, "cuántos grupos", {})
         self.assertEqual(result.get("reply"), "hay 1 grupo")
 
+    def test_update_preview_has_verbose_and_diff(self):
+        group = Group.objects.create(name="Old")
+        with patch.object(agent.vertex, "generate",
+                          _sequence(call("update", model="auth.group", pk=str(group.pk), data='{"name":"New"}'))):
+            result = agent.handle_message(self.user, "renombrá", {})
+        preview = result["confirm"]["preview"]
+        self.assertEqual(preview["model_verbose"], "group")
+        self.assertEqual(preview["current"]["name"], "Old")
+        self.assertEqual(preview["data"]["name"], "New")
+
     def test_new_message_drops_pending_write(self):
         with patch.object(agent.vertex, "generate",
                           _sequence(call("create", model="auth.group", data='{"name":"Z"}'))):

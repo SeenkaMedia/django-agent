@@ -123,8 +123,12 @@ def _coerce(args):
 
 def _preview(op, args):
     coerced = _coerce(args)
-    return {"op": op, "model": coerced.get("model"), "pk": coerced.get("pk"),
-            "data": coerced.get("data"), "filters": coerced.get("filters")}
+    label, pk = coerced.get("model"), coerced.get("pk")
+    preview = {"op": op, "model": label, "model_verbose": registry.verbose(label),
+               "pk": pk, "data": coerced.get("data")}
+    if op in ("update", "delete") and label and pk is not None:
+        preview["current"] = registry.snapshot(label, pk)
+    return preview
 
 
 def _tool_message(conv, name, result):

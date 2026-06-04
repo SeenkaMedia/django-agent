@@ -29,12 +29,24 @@
 .ag-model { align-self: flex-start; background: #fff; border: 1px solid #e2e6ee; border-bottom-left-radius: 4px; }
 .ag-tool { align-self: flex-start; font-size: 11.5px; color: #6b7280; background: transparent; padding: 2px 6px; }
 
-.ag-card { align-self: flex-start; max-width: 92%; background: #fff; border: 1px solid #f0c36b; border-radius: 12px; padding: 12px; font-size: 13px; }
-.ag-card h4 { margin: 0 0 6px; font-size: 13px; color: #b07b16; }
-.ag-card pre { margin: 6px 0; background: #0d1017; color: #e3e7f0; border-radius: 8px; padding: 8px 10px; font-size: 12px; overflow: auto; }
-.ag-card .ag-actions { display: flex; gap: 8px; margin-top: 8px; }
-.ag-card button { border: 0; border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer; }
+.ag-card { align-self: flex-start; max-width: 92%; background: #fff; border: 1px solid #e2e6ee; border-radius: 12px; overflow: hidden; font-size: 13px; }
+.ag-card-head { display: block; padding: 9px 12px; font-weight: 600; font-size: 12.5px; color: #fff; background: #6b7280; }
+.ag-card.create .ag-card-head { background: #16a34a; }
+.ag-card.update .ag-card-head { background: #d97706; }
+.ag-card.delete .ag-card-head { background: #dc2626; }
+.ag-kv { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.ag-kv-row { display: flex; gap: 8px; align-items: baseline; }
+.ag-k { color: #6b7280; min-width: 80px; flex-shrink: 0; font-size: 12px; }
+.ag-v { color: #1a1f29; }
+.ag-new { color: #1a1f29; font-weight: 600; }
+.ag-old { color: #9aa3b2; text-decoration: line-through; }
+.ag-arrow { color: #9aa3b2; }
+.ag-same { color: #6b7280; }
+.ag-warn { display: block; padding: 0 12px 6px; color: #dc2626; font-size: 12px; }
+.ag-actions { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid #eef1f6; }
+.ag-actions button { border: 0; border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer; }
 .ag-ok { background: #16a34a; color: #fff; }
+.ag-ok.danger { background: #dc2626; }
 .ag-no { background: #eef1f6; color: #1a1f29; }
 
 .ag-foot { display: flex; gap: 8px; padding: 10px; border-top: 1px solid #e2e6ee; background: #fff; }
