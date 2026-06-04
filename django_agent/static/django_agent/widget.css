@@ -5,9 +5,10 @@
   position: fixed; right: 22px; bottom: 22px; z-index: 99999;
   width: 56px; height: 56px; border-radius: 50%; border: 0; cursor: pointer;
   background: #2b6cff; color: #fff; font-size: 24px; line-height: 56px; text-align: center;
-  box-shadow: 0 6px 20px rgba(0,0,0,.25);
+  box-shadow: 0 6px 20px rgba(0,0,0,.25); padding: 0; overflow: hidden;
 }
-.ag-btn:hover { background: #1f5be0; }
+.ag-btn:hover { transform: scale(1.05); }
+.ag-btn .ag-logo { width: 100%; height: 100%; display: block; object-fit: cover; }
 
 .ag-panel {
   position: fixed; right: 22px; bottom: 90px; z-index: 99999;

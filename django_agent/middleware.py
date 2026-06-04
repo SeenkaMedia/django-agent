@@ -5,7 +5,7 @@ from django.urls import reverse
 from . import settings as S
 
 SNIPPET = ('<link rel="stylesheet" href="{css}">'
-           '<div id="agent-root" data-history="{h}" data-message="{m}" data-confirm="{c}"></div>'
+           '<div id="agent-root" data-history="{h}" data-message="{m}" data-confirm="{c}" data-logo="{logo}"></div>'
            '<script src="{js}" defer></script>')
 
 
@@ -39,5 +39,6 @@ class WidgetMiddleware:
     def _snippet(self):
         return SNIPPET.format(
             css=static("django_agent/widget.css"), js=static("django_agent/widget.js"),
+            logo=static("django_agent/logo.svg"),
             h=reverse("django_agent:history"), m=reverse("django_agent:message"),
             c=reverse("django_agent:confirm"))

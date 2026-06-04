@@ -30,7 +30,14 @@
   var el = {};
   function build() {
     var btn = document.createElement("button");
-    btn.className = "ag-btn"; btn.textContent = "💬"; btn.title = "Asistente";
+    btn.className = "ag-btn"; btn.title = "Asistente";
+    if (root.dataset.logo) {
+      var logo = document.createElement("img");
+      logo.src = root.dataset.logo; logo.alt = "Asistente"; logo.className = "ag-logo";
+      btn.appendChild(logo);
+    } else {
+      btn.textContent = "💬";
+    }
     var panel = document.createElement("div");
     panel.className = "ag-panel";
     panel.innerHTML =
