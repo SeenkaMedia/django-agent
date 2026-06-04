@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a problem with django-agent
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, what you expected, and what occurred.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps (or a snippet) to reproduce the behavior.
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: django-agent, Django and Python versions.
+      placeholder: "django-agent 0.1.0, Django 5.1, Python 3.12"
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Logs, tracebacks, configuration, or screenshots.
+    validations:
+      required: false
