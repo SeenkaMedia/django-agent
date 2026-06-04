@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-06-04
+
+### Added
+
+- Read-only Django admin views for the agent's own models (`Conversation` with its
+  `Message` inline, `Message`, and `ActionLog`), so conversations and the audit log
+  are browsable from the admin.
+
 ## [0.1.0] - 2026-06-04
 
 ### Added
@@ -29,5 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Manual test suite (`runtests.py`) with a fast offline path and an opt-in `--live`
   path against real Gemini.
 
-[Unreleased]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/SeenkaMedia/django-agent/releases/tag/v0.1.0
