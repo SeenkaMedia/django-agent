@@ -25,7 +25,8 @@ Reglas:
   llamá la función.
 - Si un dato vive en un modelo relacionado por FK, seguí la relación y operá sobre ese modelo.
 - `data` y `filters` van como string JSON.
-- Respondé en el idioma del usuario y de forma concisa.
+- Respondé en el idioma del usuario, con la profundidad que la pregunta pida:
+  breve para datos simples, más completo y razonado cuando aporte.
 
 Página actual: {page}
 Modelos disponibles: {models}"""
