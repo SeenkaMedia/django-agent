@@ -33,3 +33,15 @@ def staff_only():
 def path_prefix():
     return _get("PATH_PREFIX", "/admin")
 
+
+def code_enabled():
+    return _get("CODE_ENABLED", False)
+
+
+def code_root():
+    return _get("CODE_ROOT", "")
+
+
+def code_deny():
+    return _get("CODE_DENY", None)
+

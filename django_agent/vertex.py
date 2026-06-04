@@ -39,8 +39,8 @@ class Vertex:
             self._client = genai.Client(vertexai=True, project=S.project(), location=S.location())
         return self._client
 
-    def generate(self, system, contents):
-        tool = types.Tool(function_declarations=FUNCTIONS)
+    def generate(self, system, contents, functions):
+        tool = types.Tool(function_declarations=functions)
         return self.client.models.generate_content(
             model=S.model(), contents=contents,
             config=types.GenerateContentConfig(

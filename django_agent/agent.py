@@ -3,11 +3,15 @@ import json
 
 from google.genai import types
 
-from . import registry, settings as S
+from . import code_access, registry, settings as S
 from .models import ActionLog, Conversation, Message
-from .vertex import vertex
+from .vertex import FUNCTIONS as CRUD_FUNCTIONS, vertex
 
 WRITE_OPS = registry.WRITE_OPS
+
+CODE_NOTE = ("\n- Para responder cómo funciona algo del código, usá search_code para ubicarlo, "
+             "outline para ver la estructura y read_file para leer SOLO el rango que necesites. "
+             "No pidas el archivo entero; traé la porción justa.")
 
 SYSTEM = """Sos un asistente embebido en el admin de Django de un servicio de Seenka.
 Ayudás al staff a consultar y modificar datos llamando a las funciones disponibles
@@ -49,7 +53,12 @@ def _public(m):
 
 def _system(user, page_context):
     models = ", ".join(registry.model_label(m) for m in registry.available_models(user))
-    return SYSTEM.format(page=json.dumps(page_context or {}, ensure_ascii=False), models=models)
+    base = SYSTEM.format(page=json.dumps(page_context or {}, ensure_ascii=False), models=models)
+    return base + CODE_NOTE if S.code_enabled() else base
+
+
+def _functions():
+    return CRUD_FUNCTIONS + code_access.FUNCTIONS if S.code_enabled() else CRUD_FUNCTIONS
 
 
 def handle_message(user, text, page_context):
@@ -76,8 +85,9 @@ def confirm(user, accept, page_context):
 
 def _run(conv, user, page_context):
     system = _system(user, page_context)
+    functions = _functions()
     for _ in range(S.max_steps()):
-        resp = vertex.generate(system, _contents(conv))
+        resp = vertex.generate(system, _contents(conv), functions)
         kind, name, args = _extract(resp)
         if kind == "text":
             Message.objects.create(conversation=conv, role="model", text=name)
@@ -94,7 +104,7 @@ def _run(conv, user, page_context):
 def _execute(user, conv, op, args):
     kwargs = _coerce(args)
     try:
-        result = registry.run(op, user, **kwargs)
+        result = code_access.run(op, **kwargs) if op in code_access.OPS else registry.run(op, user, **kwargs)
         ok = True
     except Exception as exc:
         result = {"error": f"{type(exc).__name__}: {exc}"}; ok = False
