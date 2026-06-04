@@ -1,8 +1,12 @@
 """Inyecta el widget en las páginas del admin (plug-and-play, sin tocar templates)."""
+import time
+
 from django.templatetags.static import static
 from django.urls import reverse
 
 from . import settings as S
+
+VERSION = str(int(time.time()))  # cache-busting de los assets (cambia en cada arranque)
 
 SNIPPET = ('<link rel="stylesheet" href="{css}">'
            '<div id="agent-root" data-history="{h}" data-message="{m}" data-confirm="{c}" data-logo="{logo}"></div>'
@@ -37,8 +41,9 @@ class WidgetMiddleware:
         return html.replace("</body>", self._snippet() + "</body>", 1).encode("utf-8")
 
     def _snippet(self):
+        v = "?v=" + VERSION
         return SNIPPET.format(
-            css=static("django_agent/widget.css"), js=static("django_agent/widget.js"),
+            css=static("django_agent/widget.css") + v, js=static("django_agent/widget.js") + v,
             logo=static("django_agent/logo.svg"),
             h=reverse("django_agent:history"), m=reverse("django_agent:message"),
             c=reverse("django_agent:confirm"))
