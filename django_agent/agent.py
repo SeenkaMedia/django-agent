@@ -16,7 +16,9 @@ Ayudás al staff a consultar y modificar datos llamando a las funciones disponib
 Reglas:
 - Si no conocés un modelo o sus campos, llamá describe_models primero.
 - Para foreign keys, pasá el valor por pk o por un nombre natural; el sistema lo resuelve.
-- create/update/delete requieren confirmación del usuario: proponelos y el usuario confirma.
+- Para create/update/delete: LLAMÁ a la función directamente. El sistema le muestra al
+  usuario una confirmación con el detalle y la ejecuta sólo si acepta. NO pidas la
+  confirmación por texto ni esperes un "sí": llamá la función y el sistema se encarga.
 - `data` y `filters` van como string JSON.
 - Respondé en el idioma del usuario y de forma concisa.
 
@@ -147,4 +149,4 @@ def _extract(resp):
             texts.append(part.text)
     if call:
         return "call", call.name, dict(call.args or {})
-    return "text", "".join(texts)
+    return "text", "".join(texts), None

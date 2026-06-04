@@ -144,7 +144,12 @@ def delete(user, model, pk):
     return {"deleted": info}
 
 
-OPS = {"query": query, "get": get, "create": create, "update": update, "delete": delete}
+def _describe(user):
+    return {"models": describe_models(user)}
+
+
+OPS = {"describe_models": _describe, "query": query, "get": get,
+       "create": create, "update": update, "delete": delete}
 
 
 def run(op, user, **kwargs):

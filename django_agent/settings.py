@@ -7,7 +7,7 @@ def _get(name, default):
 
 
 def model():
-    return _get("MODEL", "gemini-3.5-flash")
+    return _get("MODEL", "gemini-2.5-flash")
 
 
 def project():
