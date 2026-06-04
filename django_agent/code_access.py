@@ -42,6 +42,11 @@ def _blocked(rel):
     return any(fnmatch.fnmatch(rel, p) for p in _deny())
 
 
+def _match(rel, glob):
+    return (fnmatch.fnmatch(rel, glob) or fnmatch.fnmatch(rel, "*" + glob)
+            or fnmatch.fnmatch(os.path.basename(rel), glob))
+
+
 def _safe(path):
     full = os.path.realpath(os.path.join(_root(), path))
     if not (full == _root() or full.startswith(_root() + os.sep)):
@@ -63,7 +68,7 @@ def search_code(query, glob="*.py"):
         dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
         for name in files:
             rel = os.path.relpath(os.path.join(dirpath, name), root)
-            if not fnmatch.fnmatch(rel, glob) or _blocked(rel):
+            if not _match(rel, glob) or _blocked(rel):
                 continue
             hits += _scan(os.path.join(dirpath, name), rel, needle, MAX_MATCHES - len(hits))
             if len(hits) >= MAX_MATCHES:
