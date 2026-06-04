@@ -2,7 +2,8 @@
   "use strict";
   var root = document.getElementById("agent-root");
   if (!root) return;
-  var URLS = { history: root.dataset.history, message: root.dataset.message, confirm: root.dataset.confirm };
+  var URLS = { history: root.dataset.history, message: root.dataset.message,
+               confirm: root.dataset.confirm, reset: root.dataset.reset };
 
   function csrf() {
     var m = document.cookie.match(/csrftoken=([^;]+)/);
@@ -41,17 +42,19 @@
     var panel = document.createElement("div");
     panel.className = "ag-panel";
     panel.innerHTML =
-      '<div class="ag-head"><span>Asistente</span><span class="ag-x">✕</span></div>' +
+      '<div class="ag-head"><span>Asistente</span><span class="ag-head-btns">' +
+      '<span class="ag-reset" title="Nueva conversación">↺</span><span class="ag-x" title="Cerrar">✕</span></span></div>' +
       '<div class="ag-msgs"></div>' +
       '<div class="ag-foot"><textarea placeholder="Escribí algo…"></textarea><button class="ag-send">➤</button></div>';
     root.appendChild(btn); root.appendChild(panel);
     el = {
       btn: btn, panel: panel, msgs: panel.querySelector(".ag-msgs"),
       input: panel.querySelector("textarea"), send: panel.querySelector(".ag-send"),
-      x: panel.querySelector(".ag-x"),
+      x: panel.querySelector(".ag-x"), newBtn: panel.querySelector(".ag-reset"),
     };
     btn.addEventListener("click", toggle);
     el.x.addEventListener("click", toggle);
+    el.newBtn.addEventListener("click", newConversation);
     el.send.addEventListener("click", onSend);
     el.input.addEventListener("keydown", function (e) {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSend(); }
@@ -62,6 +65,10 @@
     var open = el.panel.classList.toggle("open");
     localStorage.setItem("agentOpen", open ? "1" : "0");
     if (open) loadHistory();
+  }
+
+  function newConversation() {
+    post(URLS.reset, {}).then(function () { el.msgs.innerHTML = ""; el.input.value = ""; });
   }
 
   function bubble(cls, text) {

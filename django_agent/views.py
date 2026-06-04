@@ -36,3 +36,12 @@ def confirm(request):
         return guard
     body = json.loads(request.body or "{}")
     return JsonResponse(agent.confirm(request.user, bool(body.get("accept")), body.get("page_context")))
+
+
+@require_POST
+def reset(request):
+    guard = _guard(request)
+    if guard:
+        return guard
+    agent.reset(request.user)
+    return JsonResponse({"ok": True})

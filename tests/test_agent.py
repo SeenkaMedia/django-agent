@@ -92,6 +92,13 @@ class AgentMockedTests(TestCase):
         self.assertEqual(preview["current"]["name"], "Old")
         self.assertEqual(preview["data"]["name"], "New")
 
+    def test_reset_clears_history(self):
+        with patch.object(agent.vertex, "generate", _sequence(text("hola"))):
+            agent.handle_message(self.user, "hola", {})
+        self.assertTrue(Message.objects.exists())
+        agent.reset(self.user)
+        self.assertFalse(Message.objects.exists())
+
     def test_new_message_drops_pending_write(self):
         with patch.object(agent.vertex, "generate",
                           _sequence(call("create", model="auth.group", data='{"name":"Z"}'))):

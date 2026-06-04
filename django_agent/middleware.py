@@ -9,7 +9,7 @@ from . import settings as S
 VERSION = str(int(time.time()))  # cache-busting de los assets (cambia en cada arranque)
 
 SNIPPET = ('<link rel="stylesheet" href="{css}">'
-           '<div id="agent-root" data-history="{h}" data-message="{m}" data-confirm="{c}" data-logo="{logo}"></div>'
+           '<div id="agent-root" data-history="{h}" data-message="{m}" data-confirm="{c}" data-reset="{r}" data-logo="{logo}"></div>'
            '<script src="{js}" defer></script>')
 
 
@@ -46,4 +46,4 @@ class WidgetMiddleware:
             css=static("django_agent/widget.css") + v, js=static("django_agent/widget.js") + v,
             logo=static("django_agent/logo.svg"),
             h=reverse("django_agent:history"), m=reverse("django_agent:message"),
-            c=reverse("django_agent:confirm"))
+            c=reverse("django_agent:confirm"), r=reverse("django_agent:reset"))

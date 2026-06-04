@@ -20,8 +20,10 @@
 .ag-panel.open { display: flex; }
 
 .ag-head { padding: 12px 14px; background: #11151d; color: #fff; font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
-.ag-head .ag-x { cursor: pointer; opacity: .7; font-weight: 400; }
-.ag-head .ag-x:hover { opacity: 1; }
+.ag-head-btns { display: flex; gap: 12px; align-items: center; }
+.ag-head .ag-x, .ag-head .ag-reset { cursor: pointer; opacity: .7; font-weight: 400; }
+.ag-head .ag-reset { font-size: 16px; }
+.ag-head .ag-x:hover, .ag-head .ag-reset:hover { opacity: 1; }
 
 .ag-msgs { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; background: #f6f8fb; }
 .ag-msg { max-width: 86%; padding: 9px 12px; border-radius: 12px; font-size: 13.5px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
