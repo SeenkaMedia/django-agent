@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django-agent"
+version = "0.1.0"
+description = "Asistente LLM embebible (widget flotante) para admin de Django, con CRUD automático sobre los modelos y backend Gemini en Vertex AI."
+requires-python = ">=3.10"
+dependencies = [
+    "Django>=4.2",
+    "google-genai>=0.3",
+]
+
+[tool.setuptools.packages.find]
+include = ["django_agent*"]
+
+[tool.setuptools.package-data]
+django_agent = ["templates/**/*", "static/**/*"]

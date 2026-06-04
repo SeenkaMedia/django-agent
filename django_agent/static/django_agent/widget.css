@@ -1,0 +1,44 @@
+#agent-root { all: initial; }
+.ag-btn, .ag-panel, .ag-panel * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; box-sizing: border-box; }
+
+.ag-btn {
+  position: fixed; right: 22px; bottom: 22px; z-index: 99999;
+  width: 56px; height: 56px; border-radius: 50%; border: 0; cursor: pointer;
+  background: #2b6cff; color: #fff; font-size: 24px; line-height: 56px; text-align: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,.25);
+}
+.ag-btn:hover { background: #1f5be0; }
+
+.ag-panel {
+  position: fixed; right: 22px; bottom: 90px; z-index: 99999;
+  width: 380px; max-width: calc(100vw - 32px); height: 560px; max-height: calc(100vh - 130px);
+  display: none; flex-direction: column;
+  background: #fff; color: #1a1f29; border: 1px solid #e2e6ee; border-radius: 14px; overflow: hidden;
+  box-shadow: 0 14px 44px rgba(0,0,0,.22);
+}
+.ag-panel.open { display: flex; }
+
+.ag-head { padding: 12px 14px; background: #11151d; color: #fff; font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+.ag-head .ag-x { cursor: pointer; opacity: .7; font-weight: 400; }
+.ag-head .ag-x:hover { opacity: 1; }
+
+.ag-msgs { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; background: #f6f8fb; }
+.ag-msg { max-width: 86%; padding: 9px 12px; border-radius: 12px; font-size: 13.5px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+.ag-user { align-self: flex-end; background: #2b6cff; color: #fff; border-bottom-right-radius: 4px; }
+.ag-model { align-self: flex-start; background: #fff; border: 1px solid #e2e6ee; border-bottom-left-radius: 4px; }
+.ag-tool { align-self: flex-start; font-size: 11.5px; color: #6b7280; background: transparent; padding: 2px 6px; }
+
+.ag-card { align-self: flex-start; max-width: 92%; background: #fff; border: 1px solid #f0c36b; border-radius: 12px; padding: 12px; font-size: 13px; }
+.ag-card h4 { margin: 0 0 6px; font-size: 13px; color: #b07b16; }
+.ag-card pre { margin: 6px 0; background: #0d1017; color: #e3e7f0; border-radius: 8px; padding: 8px 10px; font-size: 12px; overflow: auto; }
+.ag-card .ag-actions { display: flex; gap: 8px; margin-top: 8px; }
+.ag-card button { border: 0; border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer; }
+.ag-ok { background: #16a34a; color: #fff; }
+.ag-no { background: #eef1f6; color: #1a1f29; }
+
+.ag-foot { display: flex; gap: 8px; padding: 10px; border-top: 1px solid #e2e6ee; background: #fff; }
+.ag-foot textarea { flex: 1; resize: none; border: 1px solid #d7dce6; border-radius: 10px; padding: 9px 11px; font-size: 13.5px; height: 40px; max-height: 120px; outline: none; }
+.ag-foot textarea:focus { border-color: #2b6cff; }
+.ag-send { border: 0; background: #2b6cff; color: #fff; border-radius: 10px; padding: 0 14px; cursor: pointer; font-size: 16px; }
+.ag-send:disabled { opacity: .5; cursor: default; }
+.ag-typing { align-self: flex-start; color: #9aa3b2; font-size: 12px; font-style: italic; }

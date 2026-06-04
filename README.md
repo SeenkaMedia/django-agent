@@ -37,6 +37,51 @@ Un agente que escribe en la DB necesita barandas desde el día uno:
 
 Claude API (tool-use nativo y confiable para acciones). Alternativa evaluada: LLM interno del cluster (`llm-service`), descartado para v1 por menor fiabilidad del tool-use.
 
+## Instalación (plug-and-play)
+
+```bash
+pip install "git+ssh://git@github.com/SeenkaMedia/django-agent.git@main"
+```
+
+En `settings.py`:
+
+```python
+INSTALLED_APPS += ["django_agent"]
+MIDDLEWARE += ["django_agent.middleware.WidgetMiddleware"]   # inyecta el widget en el admin
+
+AGENT_VERTEX_PROJECT = "infoxel-tagx"   # requerido
+# Opcionales (defaults):
+# AGENT_MODEL = "gemini-3.5-flash"
+# AGENT_VERTEX_LOCATION = "us-central1"
+# AGENT_STAFF_ONLY = True
+# AGENT_PATH_PREFIX = "/admin"
+```
+
+En `urls.py`:
+
+```python
+path("agent/", include("django_agent.urls")),
+```
+
+```bash
+python manage.py migrate
+```
+
+**Prerequisito de infra:** la service account de los pods necesita el rol `roles/aiplatform.user` en `infoxel-tagx` (ADC → Vertex). Sin eso el agente no puede hablar con Gemini.
+
+Listo: el widget aparece abajo a la derecha en el admin para usuarios `is_staff`, con CRUD sobre los modelos registrados (respetando permisos) y confirmación + audit log en toda escritura.
+
 ## Estado
 
-🚧 Diseño. Sin código todavía — ver roadmap.
+🚧 MVP implementado (rama `feat/mvp`). Pendiente: validación end-to-end (instalar en panelists + rol de Vertex) y tests con mock del cliente Vertex.
+
+### Componentes
+| Archivo | Qué hace |
+|---|---|
+| `registry.py` | CRUD genérico sobre modelos del admin + permisos + schemas |
+| `vertex.py` | Cliente Gemini/Vertex + declaración de funciones |
+| `agent.py` | Loop de function-calling + confirmación + audit |
+| `views.py` / `urls.py` | Endpoints `history` / `message` / `confirm` |
+| `middleware.py` | Inyecta el widget en el admin |
+| `static/.../widget.{js,css}` | Widget flotante (vanilla) |
+| `models.py` | `Conversation` / `Message` / `ActionLog` |
