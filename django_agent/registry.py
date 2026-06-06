@@ -55,7 +55,7 @@ def _fields(model):
         info = {"name": f.name, "type": f.get_internal_type(),
                 "required": not (f.blank or f.null or f.has_default())}
         if getattr(f, "choices", None):
-            info["choices"] = [c[0] for c in f.choices]
+            info["choices"] = [_jsonable(c[0]) for c in f.choices]
         if f.is_relation and f.related_model is not None:
             info["fk"] = model_label(f.related_model)
         out.append(info)

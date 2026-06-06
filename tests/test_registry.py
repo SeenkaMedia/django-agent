@@ -38,6 +38,22 @@ class RegistryTests(TestCase):
         nobody = User.objects.create_user("nobody", is_staff=True)
         self.assertEqual(registry.describe_models(nobody), [])
 
+    def test_fields_choices_are_json_safe(self):
+        import json
+        import types
+        import zoneinfo
+
+        tz = zoneinfo.ZoneInfo("UTC")
+        field = types.SimpleNamespace(
+            name="timezone", auto_created=False, primary_key=False,
+            blank=True, null=False, is_relation=False, related_model=None,
+            choices=[(tz, "UTC")], get_internal_type=lambda: "CharField",
+            has_default=lambda: False)
+        model = types.SimpleNamespace(_meta=types.SimpleNamespace(concrete_fields=[field]))
+        out = registry._fields(model)
+        self.assertEqual(out[0]["choices"], [str(tz)])
+        json.dumps(out)
+
     def test_crud_happy_path(self):
         pk = registry.create(self.staff, "auth.group", {"name": "Editors"})["pk"]
         self.assertEqual(registry.get(self.staff, "auth.group", pk)["name"], "Editors")

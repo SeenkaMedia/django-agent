@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-06-06
+
+### Fixed
+
+- `describe_models` no longer crashes with `TypeError: Object of type ZoneInfo is
+  not JSON serializable` when an admin-registered model has a field whose `choices`
+  hold non-JSON-native values (e.g. a `TimeZoneField`, whose choice values are
+  `ZoneInfo` objects). Field `choices` are now run through `_jsonable`. This is the
+  same class of bug as 0.1.3 but on the model-introspection path, which a plain
+  greeting triggers before any CRUD call.
+
 ## [0.1.3] - 2026-06-05
 
 ### Fixed
@@ -57,7 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Manual test suite (`runtests.py`) with a fast offline path and an opt-in `--live`
   path against real Gemini.
 
-[Unreleased]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.0...v0.1.1
