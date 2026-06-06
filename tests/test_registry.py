@@ -67,3 +67,15 @@ class RegistryTests(TestCase):
                 return "weird"
 
         self.assertEqual(registry._jsonable(Weird()), "weird")
+
+    def test_jsonable_recurses_into_nested_containers(self):
+        import json
+        import zoneinfo
+
+        aware = datetime.datetime(2020, 1, 2, 3, 4, tzinfo=zoneinfo.ZoneInfo("UTC"))
+        value = {"when": aware, "tags": [aware, {"amount": decimal.Decimal("1.5")}]}
+        result = registry._jsonable(value)
+        self.assertEqual(result["when"], aware.isoformat())
+        self.assertEqual(result["tags"][0], aware.isoformat())
+        self.assertEqual(result["tags"][1]["amount"], 1.5)
+        json.dumps(result)

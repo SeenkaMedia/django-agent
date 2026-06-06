@@ -63,13 +63,17 @@ def _fields(model):
 
 
 def _jsonable(value):
-    if value is None or isinstance(value, (str, int, float, bool, dict, list)):
+    if value is None or isinstance(value, (str, int, float, bool)):
         return value
+    if isinstance(value, dict):
+        return {k: _jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_jsonable(v) for v in value]
     if isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
         return value.isoformat()
     if isinstance(value, Decimal):
         return float(value)
-    return str(value)  # FieldFile, UUID, etc.
+    return str(value)  # ZoneInfo, FieldFile, UUID, etc.
 
 
 def _serialize(obj):

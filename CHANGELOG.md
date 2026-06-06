@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-06-05
+
+### Fixed
+
+- `query`/`get`/`create`/`update`/`delete` no longer crash with
+  `TypeError: Object of type ZoneInfo is not JSON serializable` when a model field
+  holds a `dict`/`list` (e.g. a `JSONField` or `ArrayField`) containing nested
+  values that are not JSON-native (timezone-aware datetimes, `ZoneInfo`, `Decimal`,
+  etc.). `_jsonable` now recurses into dicts and lists instead of returning them
+  untouched, so every nested value is normalized before the tool result is persisted.
+
 ## [0.1.2] - 2026-06-04
 
 ### Changed
@@ -46,7 +57,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Manual test suite (`runtests.py`) with a fast offline path and an opt-in `--live`
   path against real Gemini.
 
-[Unreleased]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/SeenkaMedia/django-agent/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/SeenkaMedia/django-agent/releases/tag/v0.1.0
