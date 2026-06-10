@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: [self-hosted, gcp, docker]
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
